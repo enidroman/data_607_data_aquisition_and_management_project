@@ -1,0 +1,108 @@
+---
+title: "Data_607_Project_1_Chess_Tournament_Results.rmd"
+author: "Enid Roman"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr, quietly = TRUE)
+library(stringr, quietly = TRUE)
+library(tidyverse)
+library(dplyr)
+```
+
+#### I used readLines() function because it reads text lines from an input file. The readLines() function is perfect for text files since it reads the text line by line and creates character objects for each of the lines.
+
+#### While uploading the dataset to R I got a warning, incomplete final line found in the dataset. The message indicates that the last line of the file doesn't end with an End Of Line (EOL) character (linefeed (\n) or carriage return+linefeed (\r\n)). The original intention of this message was to warn me that the file may be incomplete; most datafiles have an EOL character as the very last character in the file. I was able to correct this by going back to the origional file, navigate to the very last line of the file, place the cursor at the end of that line, press return and resaved the file.
+
+#### I did a head() to see the first rows of the dataset.
+
+```{r}
+chess_tournament <- readLines('https://raw.githubusercontent.com/enidroman/data_607_data_aquisition_and_management_project/main/tournamentinfo.txt')
+
+head(chess_tournament)
+```
+
+####I did a summary of the dataset. 
+
+```{r}
+summary(chess_tournament)
+```
+
+#### I noticed the first 4 lines was not needed. All I needed was the information from line 5 and on and the pattern was the player information and games played, repeating after every 3 lines. In order to extract the required fields I needed I separated the data into 2 matrices.
+
+#### The warning below is just a warning not an error. 
+
+```{r}
+deconstruct_chess_tournament <- matrix(unlist(chess_tournament), byrow=TRUE)
+
+d1_chess_tournament <- deconstruct_chess_tournament[seq(5,length(deconstruct_chess_tournament),3)]
+head(d1_chess_tournament)
+```
+
+```{r}
+d2_chess_tournament <- deconstruct_chess_tournament[seq(6,length(deconstruct_chess_tournament),3)]
+head(d2_chess_tournament)
+```
+
+#### I used string manipulation and regular expressions to extract ID, Player Name, Total Pts from matrix d1 and Player State, Pre Rating, Round from matrix d2. 
+
+```{r}
+# From matrix d1 I matched and extracted the ID column.
+ID <- as.numeric(str_extract(d1_chess_tournament, '\\d+'))
+
+# From matrix d1 I matched and extracted the Name from Name column.
+Name <- str_extract(d1_chess_tournament, '[A-z].{1,32}') 
+
+Player_Name <- str_trim(str_extract(Name, '.+\\s{2,}'))
+
+# From matrix d2 I matched and extracted the States from the State column. 
+Player_State <- str_extract(d2_chess_tournament, '[A-Z]{2}') 
+
+# From matrix d1 I matched and extract the Total Pts column. 
+Total_Number_of_Points <- as.numeric(str_extract(d1_chess_tournament, '\\d+\\.\\d'))
+
+# From matrix d2 I matched and extract the Prerating column. 
+PreRating <- str_extract(d2_chess_tournament, 'R:.{8,}-')
+
+PreRating <- as.numeric(str_extract(PreRating, '\\d{1,4}'))
+
+# From matrix d2 I matched and extracted Rounds.(Needed this for the average pre chess rating calculation)
+Rounds <- str_extract_all(d1_chess_tournament, '[A-Z]\\s{2,}\\d+')
+
+Rounds <- str_extract_all(Rounds, '\\d+')
+```
+#### I used Round and Pre Rating to calculate the Average Pre Chess Rating of Opponents using a loop.
+
+```{r}
+Avg_Pre_Chess_Rating_Opp <- c()
+
+for(i in c(1:length(Rounds))){
+  Avg_Pre_Chess_Rating_Opp[i] <- round(mean(PreRating[as.numeric(Rounds[[i]])]),0)
+}
+Avg_Pre_Chess_Rating_Opp
+```
+
+#### I constructed the data frame. 
+
+```{r}
+new_chess_tournament <- data.frame(Player_Name, Player_State, Total_Number_of_Points, PreRating, Avg_Pre_Chess_Rating_Opp)
+
+head(new_chess_tournament)
+```
+#### I created an R Markdown file that generates a .CSV file. You can see the new csv file in github.
+
+```{r}
+write.csv(new_chess_tournament, file = "new_chess_tournament.csv")
+```
+
+
+
+
