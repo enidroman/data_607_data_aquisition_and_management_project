@@ -1,0 +1,195 @@
+---
+title: "Data_607_Project_2_Sangeetha_Sasikumar_Untidy_Dataset_Grades"
+author: "Enid Roman"
+date: "2022-10-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **ABOUT THE DATASET:**
+
+#### This dataset was created by Sangeetha Sasikumar.
+
+#### Not sure where Sangeetha got the information from but it looks like grades based on gender and age. 
+
+#### What age and gender has the highest average of them all?
+
+```{r}
+# Upload the libraries needed.
+
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+# Import the data from github. 
+# Link is provided to the csv file below: 
+
+#https://github.com/enidroman/data_607_data_aquisition_and_management_project/blob/main/Sangeetha%20Sasikumar%20Untidy%20Dataset%20Grades.csv
+
+urlfile <-'https://raw.githubusercontent.com/enidroman/data_607_data_aquisition_and_management_project/main/Sangeetha%20Sasikumar%20Untidy%20Dataset%20Grades.csv'
+
+grades <- read.csv(urlfile)
+grades
+```
+
+### **DATA CLEANING AND TRANSFORMATION**
+
+#### In observing the dataset I see that: 
+
+#### 1. Age column needs to be converted from character to integer.
+
+#### 2. Grades need to be converted from double to integer. 
+
+#### 3. Gender should be converted from integer to character.
+
+#### 4. The special character from Age Column needs to be removed. 
+
+#### 5. The decimals in Grades Columns needs to removed. 
+
+#### 6. The 1 for Female and 0 for Male needs to be renamed to Female and Male. 
+
+#### 7. I don't think the dataset needs to be converted to pivot wide or pivot long.
+
+```{r}
+# Mutate function to remove the quotes from the integers in columns Age. 
+
+quotes <- grades %>% 
+  mutate(across(
+    everything(),
+    ~ map_chr(.x, ~ gsub("\"", "", .x))
+  ))
+quotes
+```
+
+```{r}
+# Round the decimal to 0 for Age and Grades columns to remove the decimals. 
+
+decimal <- quotes
+decimal$Age<-round(as.numeric(decimal$Age), 0) 
+decimal$Grades<-round(as.numeric(decimal$Grades), 0)
+decimal
+
+```
+
+```{r}
+# Checked to make sure that all columns is in the proper Class. 
+
+numbers <- decimal
+numbers$Age <- as.integer(numbers$Age)                # First column is a double.
+numbers$Grades <- as.integer(numbers$Grades)          # Second column is a double.
+numbers$Gender <- as.character(numbers$Gender)        # Third column is an integer.
+sapply(numbers, class)
+
+```
+
+```{r}
+# Transform 1 to Female and 0 to Male. 
+
+gender <- numbers
+gender$Gender[gender$Gender == 1] <- "female"
+gender$Gender[gender$Gender == 0] <- "male"
+gender
+
+```
+
+```{r}
+# Rearranged the columns.
+
+gender <- gender[, c("Names", "Gender", "Age", "Grades")] 
+gender
+```
+### **Analysis**
+
+#### No analysis was requested on the discussion but I created my own analysis.
+
+#### I see the dataframe is 6 rows in length. Names and Gender columns is class as characters. The Age column Min is 6.0, 1st Quarter is 6.0., Median 6.5, Mean is 6.5, 3rd Quarter is 7.0, the Max is 7.0. The Grades column Min is 81.0, 1st Quarter is 86.25, Median 90.50, Mean is 88.83, 3rd Quarter is 91.75, the Max is 94.00.
+
+```{r}
+# Summary of each column. 
+
+summary(gender)
+```
+
+#### Female has a higher average then the male. 
+
+```{r}
+# Aggregate Function to compute summary statistic for subsets of the data, Grades by gender(Male and Female).
+
+group_mean <- aggregate(x = gender$Grades,
+                    by = list(gender$Gender),
+                    FUN = mean)
+
+colnames(group_mean) <- c("Gender", "Mean")
+
+group_mean
+```
+#### 6 years old had a higher average then 7 year old. 
+
+```{r}
+# Aggregate Function to compute summary statistic for subsets of the data, Age by Gender(Female and Male).
+
+group_mean <- aggregate(x = gender$Grades,
+                    by = list(gender$Age),
+                    FUN = mean)
+
+colnames(group_mean) <- c("Age", "Mean")
+
+group_mean
+```
+#### 6 year old females had higher average then 7 year old male.  
+
+```{r}
+# Aggregate function to aggregate the sum to summarize the data frame based on the two variables, Outcome and Gender.
+
+list_aggregate <- aggregate(gender$Grades, by = list(gender$Gender, gender$Age), FUN = sum)
+
+colnames(list_aggregate) <- c("Gender", "Age", "Mean")
+
+list_aggregate
+```
+#### Not much of a difference. Slightly a little higher in grades for the 7 year old male then female.
+
+```{r}
+# Bar graph by age, gender, and grades. 
+
+ggplot(gender, aes(x = Age, y = Grades, fill = Gender)) +
+  geom_col(width = 0.5, position = "dodge")
+```
+
+### **CONCLUSION**
+
+#### In my analysis I observed that in this dataset 6 year old females had higher average then 7 year old male. I would of prefer to know more information regarding the dataset and for the dataset to have more observations. It would of been nice to have to take it apart or convert it from long to wide or vice versa. Did alot of data cleaning. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
