@@ -1,0 +1,169 @@
+---
+title: "Data_607_Project_2_Seung_Min_Song_Untidy_Data_Admit"
+author: "Enid Roman"
+date: "2022-10-09"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **ABOUT THE DATASET:**
+
+#### This dataset was created by Seung Min Song which information was taken from the following website:
+
+#### https://www.randomservices.org/random/data/Berkeley.html
+
+#### The dataset represents admissions data at the University of California, Berkeley in 1973 according to the variables department (A, B, C, D, E), gender (male, female), and outcome admitted or denied. 
+
+#### Were there gender bias during the application process?
+
+```{r}
+# Upload the libraries 
+
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+# Import the data from github. 
+# Link is provided to the csv file below: 
+# https://github.com/enidroman/data_607_data_aquisition_and_management_project/blob/main/Seung%20Min%20Song%20Untidy%20Dataset%20Admit.csv
+
+urlfile <- "https://raw.githubusercontent.com/enidroman/data_607_data_aquisition_and_management_project/main/Seung%20Min%20Song%20Untidy%20Dataset%20Admit.csv"
+
+admit_reject <- read.csv(urlfile)
+admit_reject
+```
+### **DATA CLEANING AND TRANSFORMATION**
+
+#### In observing the dataset I see that: 
+
+#### 1. Admited and Rejected should not have their seperate columns. There should be only one column for both Admitted and Rejected. A new column should be created for Admit and Reject and be named Outcome. That column should be the first column. 
+
+#### 2, A new column must be created for Numbers of Applicants for the numbers of Admitted and Rejected, which should go at the end after Department. The numbers of applicants should be aligned with the Admiitted and Rejected and Male and Female and the Deptartment. 
+
+#### 3. Columns should be rearranged, Outcome, Gender, Dept, and Number_of_Applicants.
+
+```{r}
+# Transform the dataframe into a long format to have Admitted and Rejected in one column and have Numbers of Applicants in one column.
+
+#outcome <- admit_reject %>% 
+ # pivot_longer (c(`Admitted`, `Rejected`), names_to = "Outcome", values_to = "Numbers_of_Applicants") 
+#outcome
+
+outcome <- admit_reject %>% 
+  gather(key = "Outcome", value = "Number_of_Applicants", Admitted:Rejected) %>%
+   arrange(desc(Gender)) %>%
+   arrange(Dept)
+
+outcome
+```
+
+```{r}
+# Rearranged the columns. 
+
+outcome <- outcome[, c("Outcome", "Gender", "Dept", "Number_of_Applicants")] 
+outcome
+```
+### **ANALYSIS**
+
+#### No analysis was requested on the discussion but I created my own analysis.
+
+#### I see the dataframe is 24 rows in length. Outcome, Gender, Dept is class as characters. The Number of Applicants Min is 8.0, 1st Quarter is 80., Median 170.0, Mean is 188.6, 3rd Quarter is 302.5, the Max is 512.0.
+
+```{r}
+# Summary of each column.
+
+summary(outcome)
+```
+
+#### There were more applicants that were rejected then Admitted. 
+
+```{r}
+# Aggregate Function to compute summary statistic for subsets of the data, Average of Number of Applicants by Outcome(Applicants Admitted and Rejected).
+
+group_mean <- aggregate(x = outcome$Number_of_Applicants, 
+                    by = list(outcome$Outcome),
+                    FUN = mean)
+
+colnames(group_mean) <- c("Outcome", "Mean")
+
+group_mean
+```
+#### There were more applicants that were male then female.
+
+#### Please note: I don't know why Female came out twice in this dataframe. For some reason the female count comes out to 10. I did checked everything it seem fine. 
+
+```{r}
+# Aggregate Function to compute summary statistic for subsets of the data, Average of Number of Applicants by Gender(Female and Male).
+
+group_mean <- aggregate(x = outcome$Number_of_Applicants, 
+                    by = list(outcome$Gender),
+                    FUN = mean)
+
+colnames(group_mean) <- c("Gender", "Mean")
+
+group_mean
+```
+#### Please note: I don't know why the # number of count is wrong below. 
+
+```{r}
+sum(outcome$Gender=='Female')
+```
+```{r}
+sum(outcome$Gender=='Male')
+```
+#### There were more applicants in Dept C and less in Dept E.
+
+```{r}
+# Aggregate Function to compute summary statistic for subsets of the data, Average of Number of Applicants by Dept (A, B, C, D, E, F).
+
+group_mean <- aggregate(x = outcome$Number_of_Applicants, 
+                    by = list(outcome$Dept),
+                    FUN = mean)
+colnames(group_mean) <- c("Dept", "Mean")
+
+group_mean
+```
+#### Please note again I have the extra set of Female Admit and Reject and I don't know why. `
+
+#### There were 557 Female that were admitted and 1278 Female that were rejected.
+
+#### There were 1198 Male that were admitted and 1493 Male that were Rejected. 
+
+```{r}
+# Aggregate function to aggregate the sum to summarize the data frame based on the two variables, Outcome and Gender.
+
+list_aggregate <- aggregate(outcome$Number_of_Applicants, by = list(outcome$Outcome, outcome$Gender), FUN = sum)
+
+colnames(list_aggregate) <- c("Outcome", "Gender", "Number_of_Applicants")
+
+list_aggregate
+```
+#### As per the graph below more male applicants were admitted vs female applicants. 
+
+```{r}
+# Bar gaph showing Net Value per Boro Block Lot by Neighborhood. 
+
+graph <- ggplot(outcome, aes(x = Outcome, y = Number_of_Applicants, fill = Gender)) +
+  geom_col(position = "dodge")
+graph
+```
+
+
+### **CONCLUSION**
+
+#### In my analysis I observed that there were gender bias during the application process since more male were admitted then female. But as the University of California, Berkley states there were more male applicants then female that had applied. In regards to the women were applying for admission in harder departments I have yet to see since there is no data the Departments that the applicants applied to. Only that they are listed as A, B, C, D, E, and F. Further investication has to be conducted to see if this application process was actually a gender bias. 
+
+#### As per the University of California Berkley An analysis of just the variables gender and admissions shows a correlation that suggests gender bias: the proportion of women admitted was significantly lower than the proportion of men admitted. However, when the department variable is taken into account, the gender bias disappears. Generally, the women were applying for admission in the harder departments, those with low admission rates.
+
+#### A data set in which a correlation between two variables disapears, or even reverses, when a third variable is taken into account is known as Simpson's paradox.
+
+
+
