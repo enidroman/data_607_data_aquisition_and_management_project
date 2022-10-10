@@ -1,0 +1,201 @@
+---
+title: "Data_607_Project_2_Anthony_Arroyo_Untidy_Dataset_Rental"
+author: "Enid Roman"
+date: "2022-10-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **About the dataset:**
+
+#### This dataset was taken from the following website:
+
+#### https://catalog.data.gov/dataset/dof-cooperative-comparable-rental-income-queens-fy-2011-2012
+
+#### DOF: Cooperative Comparable Rental Income – Queens – FY 2011/2012
+
+#### The Department of Finance (DOF) is required by NY State law to value condominiums or cooperatives as if they were residential rental apartment buildings. DOF uses income information from rental properties similar in physical features and location to the condominiums or cooperatives. DOF applies this income data to the condominium or cooperative and determine its value in the same way DOF values rental apartment buildings. This is update annually.
+
+#### What is the Net Value per Rental? Which is the most expensive and which is the cheapest?
+
+```{r}
+# Upload the libraries.
+
+library(tidyr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+# Import the data from github. 
+# Link is provided to the csv file below: 
+# https://github.com/enidroman/data_607_data_aquisition_and_management_project/blob/main/Anthony%20Arroyo%20Untidy%20Dataset%20Rental.csv
+
+urlfile <- "https://raw.githubusercontent.com/enidroman/data_607_data_aquisition_and_management_project/main/Anthony%20Arroyo%20Untidy%20Dataset%20Rental.csv"
+
+comp_rental <- read.csv(urlfile)
+comp_rental
+```
+### **DATA CLEANING AND TRANSFORMATION**
+
+#### In observing the dataset I see that: 
+
+#### 1. The first 6 columns are Comparable Rental 1 and the 6 columns after are Comparable Rental 2. Seem to have been 2 different datasets joined together. In order to combine the columns I need to delete the extra 6 columns and bring down the obersavations from the those columns to the first 6 columns. To do that I had to create 2 dataframes, one with the Comparable Rental 1 and the second with the Comparable Rental 2. 
+
+#### 2. The columns need to be renamed. I then renamed each columns from both data frames. Then I was able to rebind the 2 dataframes and combine the first 6 columns and the second 6 columns. 
+
+#### 3. The analysis that Anthony Arroyo wanted to make with this dataframe is to determine the net value of each unit. Need to create and add a column for Estimated Expense and Net Operating Income with observations to perform the analysis. 
+
+#### 4. Need to calculate, create, and add a column called Net Value of Rental. 
+
+#### 5. Need to check the classification for the observation in each column to make sure that the class is correct. Otherwise need to convert them to the correct class. 
+
+```{r}
+# Created a new dataframe witn Comparable Rental 1 only.
+
+comp_rental1 <- select(comp_rental, COMPARABLE.RENTAL...1...Boro.Block.Lot, COMPARABLE.RENTAL...1...Neighborhood, COMPARABLE.RENTAL...1...Total.Units, COMPARABLE.RENTAL...1...Year.Built, COMPARABLE.RENTAL...1...Gross.SqFt, COMPARABLE.RENTAL...1...Estimated.Gross.Income)
+
+comp_rental1
+```
+```{r}
+# Renamed the columns in comp_rental1.
+
+rename_comp_rental1 <- comp_rental1 %>% 
+  rename(Boro_Block_Lot = COMPARABLE.RENTAL...1...Boro.Block.Lot, 
+         Neighborhood = COMPARABLE.RENTAL...1...Neighborhood, 
+         Total_Units = COMPARABLE.RENTAL...1...Total.Units, 
+         Year_Built =  COMPARABLE.RENTAL...1...Year.Built, 
+         Gross_Sq_Ft = COMPARABLE.RENTAL...1...Gross.SqFt, 
+         Gross_Income =  COMPARABLE.RENTAL...1...Estimated.Gross.Income)
+
+rename_comp_rental1
+```
+
+```{r}
+# Created a new dataframe witn Comparable Rental 2 only.
+
+comp_rental2 <- select(comp_rental, COMPARABLE.RENTAL...2...Boro.Block.Lot, COMPARABLE.RENTAL...2...Neighborhood, COMPARABLE.RENTAL...2...Total.Units, COMPARABLE.RENTAL...2...Year.Built, COMPARABLE.RENTAL...2...Gross.SqFt, COMPARABLE.RENTAL...2...Estimated.Gross.Income)
+
+comp_rental2
+```
+
+```{r}
+# Renamed the columns in comp_rental2.
+
+rename_comp_rental2 <- comp_rental2 %>% 
+  rename(Boro_Block_Lot = COMPARABLE.RENTAL...2...Boro.Block.Lot, 
+         Neighborhood = COMPARABLE.RENTAL...2...Neighborhood, 
+         Total_Units = COMPARABLE.RENTAL...2...Total.Units, 
+         Year_Built =  COMPARABLE.RENTAL...2...Year.Built, 
+         Gross_Sq_Ft = COMPARABLE.RENTAL...2...Gross.SqFt, 
+         Gross_Income =  COMPARABLE.RENTAL...2...Estimated.Gross.Income)
+
+rename_comp_rental2
+```
+
+```{r}
+# Merged both dataframes to make it into 1 dataframe again. 
+
+new_comp_rental <- rbind(rename_comp_rental1, rename_comp_rental2)
+
+new_comp_rental
+```
+### **ANALYSIS**
+
+#### In order to do the analysis I had to search on the origional dataset, DOF: Cooperative Comparable Rental Income – Queens – FY 2011/2012, for Estimated Expense and Net Operating Income for each Boro Block Lot and create and add a colomn called Estimated Expense and Net Operating Income with the observations to the dataframe.  
+
+#### Please Note: Gross Income - Estimated Expense = Net Operating Income. 
+
+#### I only had to add the column for Net Operating Income (which was already on the origional dataset) but I wanted you to show how Net Operating Income was calculated. 
+
+```{r}
+# Create and add columns with observation called Estimated Expense and Net Operating Income to be able to perform my analysis. 
+
+Estimated_Expense <- c(149526, 452085, 796014, 374654, 352611, 2367993, 357727, 149526, 165174, 1026891, 553582, 266036, 1461326, 647210, 484086, 374654)
+
+Net_Operating_Income <- c(241406, 678585, 1076324, 486216, 546613, 2300067, 456342, 241406, 207770, 862881, 481823, 339713, 2059223, 573530, 593886, 486216)
+
+new_comp_rental <- cbind(new_comp_rental, Estimated_Expense, Net_Operating_Income)
+
+new_comp_rental
+```
+#### Not sure if the calculation is correct to get the Net Value for each Unit by dividing Net Operating Income and Total Units. This formula I got when I googled.  
+
+```{r}
+# Calculate the Net Value for each Unit by dividing Net Operating Income and Total Units at the same time create a new column called Net Value Per Unit.
+
+net_value_comp_rental <- new_comp_rental
+net_value_comp_rental$Net_Value_Per_Rental <- Net_Operating_Income / new_comp_rental$Total_Units
+net_value_comp_rental
+```
+```{r}
+# Verified the class for each column. 
+
+as.data.frame(sapply(net_value_comp_rental, class))
+```
+
+#### I see the dataframe is 16 rows in length. Boro Block Lot, Neighborhood is class as characters. The Total Units Min is 20.00, 1st Quarter is 54.00, Median 66.00, Mean is 96.44, 3rd Quarter is 111.75, the Max is 286.00. The Year Built Min is 1924, 1st Quarter is 1944, Median 1951, Mean is 1952, 3rd Quarter is 1961, the Max is 1977. The Gross Sq Ft Min is 24408, 1st Quarter is 51075, Median 64655, Mean is 88125, 3rd Quarter is 105100, the Max is 275197. The Gross Income Min is 372944, 1st Quarter is 761989, Median 967314, Mean is 1350694, 3rd Quarter is 1383640, the Max is 4668060. The Gross Income Min is 372944, 1st Quarter is Min 761989, Median 967314, Mean is 1350694, 3rd Quarter is 1383640, the Max is 4668060. The Estimated Expense Min is 149526, 1st Quarter is 330967, Median 413370, Mean is 623693, 3rd Quarter is 684411, the Max is 2367993. The Operating Income Min is 207770, 1st Quarter is 427185, Median 5164150, Mean is 727000, 3rd Quarter is 724659, the Max is 2300067. The Net Value Per Rental Min is 4470, 1st Quarter is 66169, Median 7458, Mean is 7464, 3rd Quarter is 8695, the Max is 11124.
+
+```{r}
+# Summary of each column. 
+
+summary(net_value_comp_rental)
+```
+
+```{r}
+# Created a dataframe with just Boro Block Lot, Neighborhood, Net Value Per Rentsl.
+
+analysis <- net_value_comp_rental   
+select(net_value_comp_rental, Boro_Block_Lot, Neighborhood, Total_Units, Net_Operating_Income, Net_Value_Per_Rental)
+```
+#### Thought if I convert the Net Operating Income from double to interger the graph would fix but did not succeed. Line graph did not work at all for me no lines and doing the conversion from double to interger did not work either. 
+
+```{r}
+# Convert Net Operating Income and Net Value Per Rental to integer from double.
+
+numbers <- analysis
+numbers$Net_Operating_Income <- as.integer(numbers$Net_Operating_Income)      # First column is a double.
+numbers$Net_Value_Per_Rental <- as.integer(numbers$Net_Value_Per_Rental)      # Second column is a double.
+
+sapply(numbers, class)
+```
+
+
+#### Please note for some reason my bar graph and scatter plot is only plotting 14 observations instead of 16.
+
+#### Not sure if the calculation are correct the Net Value for each Unit by dividing Net Operating Income and Total Units .
+
+#### As per the below graphs Bar Block Lot in Jackson Heights is has more expensive Net Value Per Rent at close to 15000. The lowest Net Value Per Rent is Bar Block Lot in Jackson Heights also at close to 5000. Looking at the numbers from the above dataframe Bar Block Lot in Rego Park has the most expensive Net Value Per Rent at 11124.344 and the lowest is Douglaston at 4470.481.  
+
+```{r}
+# Bar gaph showing Net Value per Boro Block Lot by Neighborhood. 
+
+#ggplot(numbers, aes(x = Net_Value_Per_Rental, y = Boro_Block_Lot, colour = Neighborhood)) +
+  #geom_line()
+
+ggplot(numbers, aes(x = Net_Value_Per_Rental, y = Boro_Block_Lot, fill = Neighborhood)) +
+  geom_col()
+```
+
+```{r}
+ggplot(numbers, aes(x = Net_Value_Per_Rental, y = Boro_Block_Lot, colour = Neighborhood)) +
+  geom_point(size = 5) +
+  
+  scale_shape_manual(values = c(1,2,3,4,5,6,7)) +
+ 
+  scale_colour_hue(l = 45)
+  
+```
+
+### **CONCLUSION**
+
+#### As I stated before as per above graphs Bar Block Lot in Jackson Heights is the most expensive Net Value Per Rent at close to 15000. The lowest Net Value Per Rent is Bar Block Lot in Jackson Heights also at close to 5000. Looking at the numbers from the above dataframe Bar Block Lot in Rego Park has the most expensive Net Value Per Rent at 11124.344 and the lowest is Douglaston at 4470.481. As per the numbers this is all do to the Net Operating Income that is taken to account to maintain the buildings. Further investigation is need to find out the real cause of the high and low Net Value Per Rent. 
+
+
+
